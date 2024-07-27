@@ -1,47 +1,45 @@
 "use client";
 
-import { useState } from "react";
 import {
   Dialog,
   DialogBackdrop,
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import { useShowCartStore } from "@/store/store";
-
-const products = [
-  {
-    id: 1,
-    name: "Throwback Hip Bag",
-    href: "#",
-    color: "Salmon",
-    price: "$90.00",
-    quantity: 1,
-    imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg",
-    imageAlt:
-      "Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.",
-  },
-  {
-    id: 2,
-    name: "Medium Stuff Satchel",
-    href: "#",
-    color: "Blue",
-    price: "$32.00",
-    quantity: 1,
-    imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-02.jpg",
-    imageAlt:
-      "Front of satchel with blue canvas body, black straps and handle, drawstring top, and front zipper pouch.",
-  },
-  // More products...
-];
+import { XMarkIcon, PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
+import { useStore } from "@/store/store";
+import { useShallow } from "zustand/react/shallow";
+import { Product } from "@/types/product";
 
 export default function Cart() {
-  const show = useShowCartStore((state) => state.show);
-  const open = useShowCartStore((state) => state.open);
-  const close = useShowCartStore((state) => state.close);
+  const { show, open, close, products, remove, increase, decrease, total, setTotal } = useStore(
+    useShallow((state) => ({
+      show: state.show,
+      open: state.open,
+      close: state.close,
+      products: state.products,
+      remove: state.removeProduct,
+      increase: state.increaseQuatity,
+      decrease: state.decreaseQuantity,
+      total: state.total,
+      setTotal: state.setTotal,
+    }))
+  );
+
+  const removeFromCart = (product: Product) => {
+    remove(product.id);
+    setTotal(total - product.productPrice.price);
+  };
+
+  const increaseProductQuatity = (product: Product) => {
+    increase(product.id);
+    setTotal(total + product.productPrice.price);
+  };
+
+  const decreaseProductQuatity = (product: Product) => {
+    decrease(product.id);
+    setTotal(total - product.productPrice.price);
+  };
 
   return (
     <Dialog open={show} onClose={() => null} className="relative z-10">
@@ -86,8 +84,8 @@ export default function Cart() {
                           <li key={product.id} className="flex py-6">
                             <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                               <img
-                                alt={product.imageAlt}
-                                src={product.imageSrc}
+                                alt={"product.featuredImageUrl"}
+                                src={product.featuredImageUrl}
                                 className="h-full w-full object-cover object-center"
                               />
                             </div>
@@ -96,23 +94,37 @@ export default function Cart() {
                               <div>
                                 <div className="flex justify-between text-base font-medium text-gray-900">
                                   <h3>
-                                    <a href={product.href}>{product.name}</a>
+                                    <a href={`/products/${product.id}`}>
+                                      {product.name}
+                                    </a>
                                   </h3>
-                                  <p className="ml-4">{product.price}</p>
+                                  <p className="ml-4">
+                                    {product.productPrice.price}
+                                  </p>
                                 </div>
-                                <p className="mt-1 text-sm text-gray-500">
-                                  {product.color}
-                                </p>
                               </div>
                               <div className="flex flex-1 items-end justify-between text-sm">
-                                <p className="text-gray-500">
-                                  Qty {product.quantity}
-                                </p>
+                                <button onClick={() => increaseProductQuatity(product)} className="p-2 cursor-pointer hover:bg-gray-400">
+                                  <PlusIcon
+                                    aria-hidden="true"
+                                    className="h-6 w-6"
+                                  />
+                                </button>
+                                <span className="text-gray-500 mb-2">
+                                  Qty {product.qty}
+                                </span>
+                                <button onClick={() => decreaseProductQuatity(product)} className="p-2 cursor-pointer hover:bg-gray-400">
+                                  <MinusIcon
+                                    aria-hidden="true"
+                                    className="h-6 w-6"
+                                  />
+                                </button>
 
                                 <div className="flex">
                                   <button
                                     type="button"
-                                    className="font-medium text-indigo-600 hover:text-indigo-500"
+                                    className="font-medium text-red-600 hover:text-red-500"
+                                    onClick={() => removeFromCart(product)}
                                   >
                                     Remove
                                   </button>
@@ -129,7 +141,7 @@ export default function Cart() {
                 <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
                   <div className="flex justify-between text-base font-medium text-gray-900">
                     <p>Subtotal</p>
-                    <p>$262.00</p>
+                    <p>${total}.00</p>
                   </div>
                   <p className="mt-0.5 text-sm text-gray-500">
                     Shipping and taxes calculated at checkout.
