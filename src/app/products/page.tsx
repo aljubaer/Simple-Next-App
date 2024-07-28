@@ -1,13 +1,11 @@
 import AddToCartButton from "@/components/addToCartButton";
-import { useStore } from "@/store/store";
 import { Product } from "@/types/product";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import { useShallow } from "zustand/react/shallow";
 
 async function getProducts(): Promise<Product[]> {
-  const productsResponse = await fetch("http://localhost:5000/products", {
+  const productsResponse = await fetch(`${process.env.API_BASE_URI}/products`, {
     cache: "force-cache",
   });
 

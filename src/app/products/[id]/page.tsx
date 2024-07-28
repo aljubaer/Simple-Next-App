@@ -3,18 +3,22 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
+const STATIC_ELEMENT = 5;
+
 export async function generateStaticParams() {
-  const postsResponse = await fetch("http://localhost:5000/products");
+  const postsResponse = await fetch(`${process.env.API_BASE_URI}/products`);
 
   const products = await postsResponse.json();
 
-  return products.map((product: Product) => ({
+  return products.slice(0, STATIC_ELEMENT).map((product: Product) => ({
     id: String(product.id),
   }));
 }
 
 async function fetchProduct(id: string): Promise<Product> {
-  const productResponse = await fetch(`http://localhost:5000/products/${id}`);
+  const productResponse = await fetch(`${process.env.API_BASE_URI}/products/${id}`, { next: { revalidate: 10 } });
+
+  console.log(` - /${id}`)
 
   return productResponse.json();
 }
