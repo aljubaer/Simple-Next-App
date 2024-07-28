@@ -1,7 +1,9 @@
 import { Product } from "@/types/product";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { Suspense } from "react";
+import Loading from "./loading";
+import { redirect } from "next/navigation";
 
 const STATIC_ELEMENT = 5;
 
@@ -16,11 +18,19 @@ export async function generateStaticParams() {
 }
 
 async function fetchProduct(id: string): Promise<Product> {
-  const productResponse = await fetch(`${process.env.API_BASE_URI}/products/${id}`, { next: { revalidate: 10 } });
+  let product;
 
-  console.log(` - /${id}`)
+  try {
+    const productResponse = await fetch(
+      `${process.env.API_BASE_URI}/products/${id}`,
+      { next: { revalidate: 40 } }
+    );
+    product = await productResponse.json();
+  } catch (error) {
+    redirect("/404");
+  }
 
-  return productResponse.json();
+  return product;
 }
 
 export default async function ProductDetails({ params, searchParams }: any) {
@@ -29,7 +39,7 @@ export default async function ProductDetails({ params, searchParams }: any) {
   const product = await fetchProduct(id);
 
   return (
-    <>
+    <Suspense fallback={<Loading />}>
       <main className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">{product.name}</h1>
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
@@ -56,6 +66,6 @@ export default async function ProductDetails({ params, searchParams }: any) {
           </div>
         </div>
       </main>
-    </>
+    </Suspense>
   );
 }
